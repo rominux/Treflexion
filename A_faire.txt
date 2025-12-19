@@ -1,0 +1,3 @@
+Ajouter le system de question pour passer des cartes
+ajouter des couleurs
+rendre l'affichage des règles plus joli
