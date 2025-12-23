@@ -1,3 +1,5 @@
-Ajouter le system de question pour passer des cartes
-ajouter des couleurs
 rendre l'affichage des règles plus joli
+ajouter les tests au fonction
+mettre des commantaire pour que se connard de sue soit content que l'on est plus de 1000ligne
+rendre l'affichage des question plus joli
+modifier le system de point? (multiplicateur)
