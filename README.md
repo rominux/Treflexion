@@ -97,6 +97,6 @@ Voici l'organisation des fichiers source :
 
 ##Auteurs
 
-Projet réalisé dans le cadre de la SAÉ 1.01/1.02.
-Romain LEFEBVRE
-Baptiste MORIN
+* Projet réalisé dans le cadre de la SAÉ 1.01/1.02.
+* Romain LEFEBVRE
+* Baptiste MORIN
