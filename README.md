@@ -4,13 +4,13 @@
 
 Ce projet intègre un système de questions "Joker" pédagogique et une interface graphique en ASCII Art.
 
-## 📋 Prérequis
+##Prérequis
 
 Pour compiler et exécuter ce projet, vous devez disposer de :
 * L'environnement **iJava** (Université de Lille) installé et configuré dans votre terminal.
 * La bibliothèque `extensions` (incluse dans l'environnement iJava) pour la gestion des fichiers et CSV.
 
-## 🚀 Installation et Compilation
+##Installation et Compilation
 
 Le point d'entrée du programme est le fichier `Main.java`. Il ne contient pas de méthode `public static void main` standard mais utilise la structure `algorithm()` propre à iJava.
 
@@ -38,7 +38,7 @@ ijava test Main
 
 ```
 
-## 🎮 Comment Jouer ?
+##Comment Jouer ?
 
 ### Le But du Jeu
 
@@ -71,7 +71,7 @@ Le barème favorise les combinaisons difficiles à obtenir géométriquement :
 * **Double Paire :** 5 pts
 * **Paire :** 2 pts
 
-## 📂 Structure du Projet
+##Structure du Projet
 
 Voici l'organisation des fichiers source :
 
@@ -88,13 +88,15 @@ Voici l'organisation des fichiers source :
 
 
 
-## ✨ Fonctionnalités Clés
+##Fonctionnalités Clés
 
 * **Interface ASCII Art avancée :** Utilisation de templates et de positionnement précis du curseur.
 * **Système de Seed (Graine) :** Chaque partie possède un identifiant unique (Seed). Vous pouvez entrer une seed spécifique pour rejouer exactement la même distribution de cartes.
 * **Jokers Pédagogiques :** Intégration d'un fichier CSV pour charger dynamiquement des questions.
 * **Code Clean :** Respect des conventions de nommage, commentaires explicatifs et indentation rigoureuse.
 
-## 👥 Auteurs
+##Auteurs
 
 Projet réalisé dans le cadre de la SAÉ 1.01/1.02.
+Romain LEFEBVRE
+Baptiste MORIN
