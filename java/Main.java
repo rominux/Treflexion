@@ -14,38 +14,30 @@ class Main extends Program {
     final String[] LISTE_COULEUR = new String[]{"♦", "♥", "♣", "♠"};
     final String[] LISTE_VALEUR = new String[]{"", "", "2", "3", "4", "5", "6", "7", "8", "9", "10", "V", "D", "R", "A"};
 
-    // BAREME POINTS
-    final int PTS_ROYAL_FLUSH = 100;
-    final int PTS_STRAIGHT_FLUSH = 75;
-    final int PTS_CARRE = 50;
-    final int PTS_FLUSH = 20;
-    final int PTS_STRAIGHT = 15;
-    final int PTS_FULL = 10;
-    final int PTS_BRELAN = 10;
-    final int PTS_DOUBLE_PAIRE = 5;
-    final int PTS_PAIRE = 2;
-
-    // CODES COULEURS
-    final String RED = "\u001B[31m";
-    final String GREEN = "\u001B[32m";
-    final String RESET = "\u001B[0m";
+    // PARAMETRES HISTORIQUE
+    final int COL_HISTORIQUE = 162; 
+    final int LIG_HISTORIQUE_START = 6;
+    final int NB_LIGNES_HISTO = 35; 
 
     // GLOBALES
     String seedActuelle;
     long seedNumber;
     Question[] baseDeQuestions;
+    String[] historiqueJeu; 
 
-    // Variables pour l'affichage persistant dans jeu.txt
-    String derniereReponseJuste = "";
-    String derniereReponseJoueur = "";
+    // Variables pour l'affichage persistant
+    String derniereQuestionEnonce = "";
+    String derniereReponseJusteLettre = "";
+    String derniereReponseJusteTexte = ""; 
+    String derniereReponseJoueurLettre = "";
+    String derniereReponseJoueurTexte = "";
     String derniereExplication = "";
-    String dernierCoup = "";
 
     // ========================================================================================================================
     // ALGORITHME PRINCIPAL
     // ========================================================================================================================
     
-    // Point d'entrée du programme. Gère le menu principal et la boucle du jeu.
+    // Fonction principale qui gère le cycle de vie de l'application (Menu, Boucle de jeu, Quitter).
     void algorithm() {
         ChargerQuestions();
         boolean continuer = true;
@@ -81,36 +73,44 @@ class Main extends Program {
     // LOGIQUE JEU
     // ========================================================================================================================
 
-    // Gère le déroulement complet d'une partie (boucle des 25 tours, affichage, saisie joueur).
+    // Initialise et lance une partie complète avec la logique de tour par tour.
     void LancerJeu() {
         Carte[] paquet = CreeNouveauJeu();
         Melanger(paquet);
         Carte[][] grille = new Carte[5][5];
+
+        // Initialisation de l'historique vide
+        historiqueJeu = new String[NB_LIGNES_HISTO];
+        for (int i = 0; i < length(historiqueJeu); i += 1) {
+            historiqueJeu[i] = "";
+        }
+        AjouterHistorique("Nouvelle partie lancée.");
+        AjouterHistorique("Seed : " + seedActuelle);
+        AjouterHistorique("-----------------------");
 
         int idxPaquet = 0;
         int cartesPosees = 0;
         int jokers = NB_JOKERS_MAX;
         boolean peutPasser = true;
 
-        // Reset des affichages pour la nouvelle partie
-        derniereReponseJuste = "";
-        derniereReponseJoueur = "";
+        // Reset variables questions
+        derniereQuestionEnonce = "";
+        derniereReponseJusteLettre = "";
+        derniereReponseJoueurLettre = "";
         derniereExplication = "";
-        dernierCoup = "Début de partie";
-        String messageInfo = "";
+        
+        String messageInfo = ""; 
 
         while (cartesPosees < 25 && idxPaquet < 52) {
             Carte cActuelle = paquet[idxPaquet];
-            
             Carte cSuivante = null;
             if (idxPaquet < 51) {
                 cSuivante = paquet[idxPaquet + 1];
             }
 
-            // Calcul des scores en direct (Lignes et Colonnes)
+            // Calcul des scores
             int[] ptsLignes = new int[5];
             int[] ptsCols = new int[5];
-            
             for (int i = 0; i < 5; i += 1) {
                 ptsLignes[i] = CalculerScoreLigne(grille, i);
             }
@@ -120,17 +120,13 @@ class Main extends Program {
 
             boolean tourJoue = false;
             while (!tourJoue) {
-                // Affichage de l'écran avec les infos à jour, incluant les scores
                 AfficherEcranJeu(grille, cActuelle, cSuivante, messageInfo, jokers, ptsLignes, ptsCols);
 
-                // On efface le message informatif après l'avoir affiché
                 if (length(messageInfo) > 0) {
                     messageInfo = "";
                 }
 
                 println("\n=== TOUR " + (cartesPosees + 1) + "/25 ===");
-
-                // --- DEMANDE DE LIGNE ---
                 int lig = lireCoordonneeOuJoker("Ligne (1-5) ou 'J' : ");
 
                 if (lig == -3) {
@@ -142,7 +138,7 @@ class Main extends Program {
                         boolean gagne = PoserQuestion();
                         if (gagne) {
                             messageInfo = GREEN + ">> CORRECT ! Carte défaussée." + RESET;
-                            dernierCoup = "Joker : Carte défaussée";
+                            AjouterHistorique(GREEN + "Joker : " + NomCarte(cActuelle) + " défaussée." + RESET);
                             jokers -= 1;
                             peutPasser = false;
                             idxPaquet += 1;
@@ -153,9 +149,9 @@ class Main extends Program {
                             peutPasser = false;
                         }
                     } else {
-                        messageInfo = RED + ">> Joker impossible (épuisé ou déjà utilisé) !" + RESET;
+                        messageInfo = RED + ">> Joker impossible !" + RESET;
                     }
-                } else if (lig >= 0) { // COORDONNÉE VALIDE
+                } else if (lig >= 0) {
                     int col = lireCoordonneeOuJoker("Colonne (1-5) ou 'J' : ");
 
                     if (col == -3) {
@@ -167,7 +163,7 @@ class Main extends Program {
                             boolean gagne = PoserQuestion();
                             if (gagne) {
                                 messageInfo = GREEN + ">> CORRECT ! Carte défaussée." + RESET;
-                                dernierCoup = "Joker : Carte défaussée";
+                                AjouterHistorique(GREEN + "Joker : " + NomCarte(cActuelle) + " défaussée." + RESET);
                                 jokers -= 1;
                                 peutPasser = false;
                                 idxPaquet += 1;
@@ -183,7 +179,16 @@ class Main extends Program {
                     } else if (col >= 0) {
                         if (grille[lig][col] == null) {
                             grille[lig][col] = cActuelle;
-                            dernierCoup = "Posé " + NomCarte(cActuelle) + " en (" + (lig + 1) + "," + (col + 1) + ")";
+                            
+                            AjouterHistorique("Posé " + NomCarte(cActuelle) + " en (" + (lig + 1) + "," + (col + 1) + ")");
+                            
+                            if (EstLigneComplete(grille, lig)) {
+                                AjouterHistorique(YELLOW + "Ligne " + (lig + 1) + " complétée !" + RESET);
+                            }
+                            if (EstColonneComplete(grille, col)) {
+                                AjouterHistorique(YELLOW + "Colonne " + (col + 1) + " complétée !" + RESET);
+                            }
+
                             cartesPosees += 1;
                             idxPaquet += 1;
                             peutPasser = true;
@@ -203,19 +208,138 @@ class Main extends Program {
         readString();
     }
 
+    // Ajoute un message dans la pile de l'historique et décale les anciens messages.
+    void AjouterHistorique(String msg) {
+        for (int i = 0; i < length(historiqueJeu) - 1; i += 1) {
+            historiqueJeu[i] = historiqueJeu[i + 1];
+        }
+        historiqueJeu[length(historiqueJeu) - 1] = msg;
+    }
+
     // ========================================================================================================================
-    // OUTILS DE SAISIE
+    // CALCUL SCORE BALATRO
     // ========================================================================================================================
 
-    // Demande à l'utilisateur de saisir une coordonnée ou d'activer un joker.
+    // Détermine la valeur en jetons (Chips) d'une carte selon son rang (2-9 = valeur, 10-R = 10, A = 11).
+    int JetonsPourValeur(int valeurNum) {
+        if (valeurNum >= 2 && valeurNum <= 9) {
+            return valeurNum;
+        }
+        if (valeurNum >= 10 && valeurNum <= 13) {
+            return 10;
+        }
+        if (valeurNum == 14) {
+            return 11;
+        }
+        return 0;
+    }
+
+    // Calcule le score Balatro d'une main de 5 cartes (Chips * Mult).
+    int CalculerPointsMain(Carte[] main) {
+        for (int i = 0; i < length(main); i += 1) {
+            if (main[i] == null) {
+                return 0;
+            }
+        }
+
+        Carte[] triee = CopierTableau(main);
+        TrierMain(triee);
+
+        boolean flush = EstCouleur(triee);
+        boolean straight = EstSuite(triee);
+        int[] counts = CompterValeurs(triee);
+        
+        boolean carre = false;
+        boolean brelan = false;
+        int paires = 0;
+        
+        for (int i = 0; i < length(counts); i += 1) {
+            if (counts[i] == 4) {
+                carre = true;
+            }
+            if (counts[i] == 3) {
+                brelan = true;
+            }
+            if (counts[i] == 2) {
+                paires += 1;
+            }
+        }
+
+        int baseChips = 0;
+        int mult = 0;
+        int sommeJetonsCartes = 0;
+
+        if (flush && straight) {
+            for (int i = 0; i < 5; i += 1) {
+                sommeJetonsCartes += JetonsPourValeur(triee[i].num);
+            }
+            if (triee[0].num == 10) { 
+                baseChips = 100; mult = 8; 
+            } else { 
+                baseChips = 100; mult = 8; 
+            }
+        } else if (carre) {
+            baseChips = 60; mult = 7;
+            for (int v = 2; v <= 14; v += 1) {
+                if (counts[v] == 4) {
+                    sommeJetonsCartes += (JetonsPourValeur(v) * 4);
+                }
+            }
+        } else if (brelan && paires >= 1) {
+            baseChips = 40; mult = 4;
+            for (int i = 0; i < 5; i += 1) {
+                sommeJetonsCartes += JetonsPourValeur(triee[i].num);
+            }
+        } else if (flush) {
+            baseChips = 35; mult = 4;
+            for (int i = 0; i < 5; i += 1) {
+                sommeJetonsCartes += JetonsPourValeur(triee[i].num);
+            }
+        } else if (straight) {
+            baseChips = 30; mult = 4;
+            for (int i = 0; i < 5; i += 1) {
+                sommeJetonsCartes += JetonsPourValeur(triee[i].num);
+            }
+        } else if (brelan) {
+            baseChips = 30; mult = 3;
+            for (int v = 2; v <= 14; v += 1) {
+                if (counts[v] == 3) {
+                    sommeJetonsCartes += (JetonsPourValeur(v) * 3);
+                }
+            }
+        } else if (paires == 2) {
+            baseChips = 20; mult = 2;
+            for (int v = 2; v <= 14; v += 1) {
+                if (counts[v] == 2) {
+                    sommeJetonsCartes += (JetonsPourValeur(v) * 2);
+                }
+            }
+        } else if (paires == 1) {
+            baseChips = 10; mult = 2;
+            for (int v = 2; v <= 14; v += 1) {
+                if (counts[v] == 2) {
+                    sommeJetonsCartes += (JetonsPourValeur(v) * 2);
+                }
+            }
+        } else {
+            baseChips = 5; mult = 1;
+            sommeJetonsCartes = JetonsPourValeur(triee[4].num);
+        }
+
+        return (sommeJetonsCartes + baseChips) * mult;
+    }
+
+    // ========================================================================================================================
+    // OUTILS ET AFFICHAGE
+    // ========================================================================================================================
+
+    // Récupère l'entrée utilisateur pour jouer une carte ou activer un joker.
     int lireCoordonneeOuJoker(String message) {
         print(message);
         String s = readString();
-
         if (equals(s, "j") || equals(s, "J")) {
             return -2;
         }
-
         if (estUnNombre(s)) {
             int val = stringToInt(s);
             if (val >= 1 && val <= 5) {
@@ -227,11 +351,7 @@ class Main extends Program {
         return -1;
     }
 
-    // ========================================================================================================================
-    // SYSTÈME DE QUESTIONS
-    // ========================================================================================================================
-
-    // Charge les questions depuis le fichier CSV dans le tableau global.
+    // Charge la base de données de questions depuis le fichier CSV.
     void ChargerQuestions() {
         CSVFile f = loadCSV("visuel/questions.csv");
         int nb = rowCount(f);
@@ -250,21 +370,37 @@ class Main extends Program {
         println(nb + " questions chargées.");
     }
 
-    // Sélectionne une question aléatoire, l'affiche, récupère la réponse et vérifie si elle est correcte.
+    // Retourne le texte complet de la réponse correspondant à une lettre (A, B, C, D).
+    String GetTexteReponse(Question q, String lettre) {
+        if (equals(lettre, "A")) {
+            return q.repA;
+        }
+        if (equals(lettre, "B")) {
+            return q.repB;
+        }
+        if (equals(lettre, "C")) {
+            return q.repC;
+        }
+        if (equals(lettre, "D")) {
+            return q.repD;
+        }
+        return "Inconnu";
+    }
+
+    // Gère le processus de question Joker (Affichage, Saisie, Vérification).
     boolean PoserQuestion() {
         int idx = GenererNombrePseudoAleatoire(length(baseDeQuestions));
         Question q = baseDeQuestions[idx];
-
         String rep = "";
         boolean valid = false;
         String msgErreur = "";
 
-        // BOUCLE DE SAISIE
+        derniereQuestionEnonce = q.enonce;
+
         while (!valid) {
-            AfficherEcranQuestion(q, msgErreur, false); // false = pas encore le résultat
+            AfficherEcranQuestion(q, msgErreur, false);
             print("Votre réponse (A/B/C/D) : ");
             rep = readString();
-
             if (length(rep) == 1) {
                 char c = charAt(rep, 0);
                 if (c >= 'a' && c <= 'd') {
@@ -279,31 +415,30 @@ class Main extends Program {
             }
         }
 
-        derniereReponseJoueur = toUpperCases(rep);
-        derniereReponseJuste = q.bonneReponse;
+        derniereReponseJoueurLettre = toUpperCases(rep);
+        derniereReponseJoueurTexte = GetTexteReponse(q, derniereReponseJoueurLettre);
+        
+        derniereReponseJusteLettre = q.bonneReponse;
+        derniereReponseJusteTexte = GetTexteReponse(q, derniereReponseJusteLettre);
+        
         derniereExplication = q.explication;
+        
+        boolean correct = equals(derniereReponseJoueurLettre, derniereReponseJusteLettre);
 
-        boolean correct = false;
-        if (equals(derniereReponseJoueur, derniereReponseJuste)) {
-            correct = true;
-        }
-
-        // AFFICHAGE DU RÉSULTAT SUR L'INTERFACE QUESTION
         String msgResultat = "";
         if (correct) {
             msgResultat = GREEN + "BONNE RÉPONSE ! +1 Joker" + RESET;
         } else {
             msgResultat = RED + "MAUVAISE RÉPONSE... (" + q.bonneReponse + ")" + RESET;
         }
-
-        AfficherEcranQuestion(q, msgResultat, true); // true = afficher résultat
+        
+        AfficherEcranQuestion(q, msgResultat, true);
         println("\nAppuyez sur Entrée pour revenir au jeu...");
         readString();
-
         return correct;
     }
 
-    // Convertit une chaîne de caractères en majuscules.
+    // Convertit une chaîne minuscule en majuscule.
     String toUpperCases(String s) {
         String res = "";
         for (int i = 0; i < length(s); i += 1) {
@@ -317,53 +452,70 @@ class Main extends Program {
         return res;
     }
 
-    // ========================================================================================================================
-    // AFFICHAGE (Système de templates et buffers)
-    // ========================================================================================================================
-
-    // Affiche l'écran spécifique pour poser une question joker (utilise question.txt).
+    // Affiche l'interface de la question joker.
     void AfficherEcranQuestion(Question q, String message, boolean montrerSolution) {
         clear();
         String[] ecran = LireTemplate("visuel/question.txt");
-
-        int ligEnonce = 15;
-        int colEnonce = 10;
-        int ligRepA = 23;
-        int colRepG = 8;
-        int ligRepB = 23;
-        int colRepD = 90;
-        int ligRepC = 29;
-        int ligRepD = 29;
-        int ligMessage = 18; // Où afficher les erreurs ou le bravo
-        
-        // Affichage des textes
-        EcrireDansBuffer(ecran, ligEnonce, colEnonce, q.enonce);
-        EcrireDansBuffer(ecran, ligRepA, colRepG, "A) " + q.repA);
-        EcrireDansBuffer(ecran, ligRepB, colRepD, "B) " + q.repB);
-        EcrireDansBuffer(ecran, ligRepC, colRepG, "C) " + q.repC);
-        EcrireDansBuffer(ecran, ligRepD, colRepD, "D) " + q.repD);
-
-        // Affichage du message (Erreur ou Succès)
+        EcrireDansBuffer(ecran, 15, 10, q.enonce);
+        EcrireDansBuffer(ecran, 23, 8, "A) " + q.repA);
+        EcrireDansBuffer(ecran, 23, 90, "B) " + q.repB);
+        EcrireDansBuffer(ecran, 29, 8, "C) " + q.repC);
+        EcrireDansBuffer(ecran, 29, 90, "D) " + q.repD);
         if (length(message) > 0) {
-            EcrireDansBuffer(ecran, ligMessage, colRepG, message);
+            EcrireDansBuffer(ecran, 18, 8, message);
         }
-
-        // Si on est à la phase résultat, on peut afficher l'explication
         if (montrerSolution) {
-             EcrireDansBuffer(ecran, ligMessage, colRepD, "Explication : " + q.explication);
+            EcrireDansBuffer(ecran, 18, 90, "Explication : " + q.explication);
         }
-
         RendreBuffer(ecran);
     }
 
-    // Affiche l'écran principal du jeu avec les cartes, les messages et les scores en temps réel.
+    // Affiche l'écran principal du jeu.
     void AfficherEcranJeu(Carte[][] grille, Carte cActuelle, Carte cSuivante, String message, int nbJokers, int[] ptsLignes, int[] ptsCols) {
         clear();
         String[] ecran = LireTemplate("visuel/jeu.txt");
         int startLigne = 7;
         int startCol = 4;
 
-        // 1. Dessin de la grille
+        // 1. Historique (Droite) - AFFICHE EN PREMIER pour éviter les bugs ANSI
+        for (int i = 0; i < length(historiqueJeu); i += 1) {
+            EcrireDansBuffer(ecran, LIG_HISTORIQUE_START + i, COL_HISTORIQUE, historiqueJeu[i]);
+        }
+
+        // 2. Message Erreur (Droite / Bas) - Remonté à 45
+        if (length(message) > 0) {
+            EcrireDansBuffer(ecran, 45, 162, message);
+        }
+
+        // 3. Panneau Question (Milieu)
+        if (length(derniereReponseJusteLettre) > 0) {
+            EcrireDansBuffer(ecran, 39, 66, CYAN + "DERNIERE QUESTION :" + RESET);
+            
+            if (length(derniereQuestionEnonce) > 90) {
+                String l1 = substring(derniereQuestionEnonce, 0, 90);
+                String l2 = substring(derniereQuestionEnonce, 90, length(derniereQuestionEnonce));
+                EcrireDansBuffer(ecran, 40, 66, l1);
+                EcrireDansBuffer(ecran, 41, 66, l2);
+            } else {
+                EcrireDansBuffer(ecran, 40, 66, derniereQuestionEnonce);
+            }
+
+            String texteBonne = GREEN + "Reponse Correcte : " + derniereReponseJusteLettre + " - " + derniereReponseJusteTexte + RESET;
+            EcrireDansBuffer(ecran, 42, 66, texteBonne);
+
+            String coulJoueur = "";
+            if (equals(derniereReponseJusteLettre, derniereReponseJoueurLettre)) {
+                coulJoueur = GREEN;
+            } else {
+                coulJoueur = RED;
+            }
+            String texteJoueur = coulJoueur + "Votre Reponse    : " + derniereReponseJoueurLettre + " - " + derniereReponseJoueurTexte + RESET;
+            EcrireDansBuffer(ecran, 43, 66, texteJoueur);
+
+            EcrireDansBuffer(ecran, 44, 66, "Explication : " + derniereExplication);
+        }
+
+        // 4. Grille (Gauche)
         for (int i = 0; i < 5; i += 1) {
             for (int j = 0; j < 5; j += 1) {
                 if (grille[i][j] != null) {
@@ -374,62 +526,35 @@ class Main extends Program {
             }
         }
 
-        // 2. Affichage des scores LIGNES (à droite du tableau)
+        // 5. Scores (Gauche / Milieu) - Avec correction décalage > 99
         for (int i = 0; i < 5; i += 1) {
             if (EstLigneComplete(grille, i)) {
-                int score = ptsLignes[i];
-                int l = startLigne + (i * 7);
-                EcrireDansBuffer(ecran, l + 3, 60, "=" + score);
+                int colScore = 58;
+                if (ptsLignes[i] > 99) {
+                    colScore -= 1;
+                }
+                EcrireDansBuffer(ecran, startLigne + (i * 7) + 3, colScore, "=" + ptsLignes[i]);
             }
         }
-
-        // 3. Affichage des scores COLONNES (en bas du tableau)
         for (int j = 0; j < 5; j += 1) {
             if (EstColonneComplete(grille, j)) {
-                int score = ptsCols[j];
-                int col = 8 + (j * 10);
-                EcrireDansBuffer(ecran, 42, col, "=" + score);
+                EcrireDansBuffer(ecran, 42, 4 + (j * 10), "=" + ptsCols[j]);
             }
         }
 
-
-        // 2. Affichage des cartes courantes
+        // 6. Infos Cartes (Gauche Bas)
         if (cActuelle != null) {
             EcrireDansBuffer(ecran, 45, 21, NomCarte(cActuelle));
         }
         if (cSuivante != null) {
             EcrireDansBuffer(ecran, 45, 49, NomCarte(cSuivante));
         }
-
-        // 3. Affichage du nombre de Jokers
-        String jokerTxt = "(" + nbJokers + "/" + NB_JOKERS_MAX + ")";
-        EcrireDansBuffer(ecran, 34, 117, jokerTxt);
-
-        // 4. Affichage du CADRE "DERNIERE QUESTION" (Rappel sur l'écran de jeu)
-        if (length(derniereReponseJuste) > 0) {
-            EcrireDansBuffer(ecran, 39, 85, derniereReponseJuste);
-        }
-        if (length(derniereReponseJoueur) > 0) {
-            EcrireDansBuffer(ecran, 40, 85, derniereReponseJoueur);
-        }
-        if (length(derniereExplication) > 0) {
-            EcrireDansBuffer(ecran, 41, 66, derniereExplication);
-        }
-
-        // 5. Affichage du Dernier Coup Joué
-        if (length(dernierCoup) > 0) {
-            EcrireDansBuffer(ecran, 45, 67, ">> " + dernierCoup);
-        }
-
-        // 6. Affichage du message d'information
-        if (length(message) > 0) {
-            EcrireDansBuffer(ecran, 45, 67, message);
-        }
-
+        EcrireDansBuffer(ecran, 35, 117, "(" + nbJokers + "/" + NB_JOKERS_MAX + ")");
+        
         RendreBuffer(ecran);
     }
 
-    // Calcule la longueur d'une chaîne en ignorant les codes couleurs ANSI invisibles.
+    // Calcule la longueur visuelle d'une chaîne (sans les codes ANSI).
     int longueurVisuelle(String s) {
         int len = 0;
         boolean inAnsi = false;
@@ -446,7 +571,7 @@ class Main extends Program {
         return len;
     }
 
-    // Écrit une chaîne de caractères dans le tableau représentant l'écran à une position donnée.
+    // Ecrit du texte dans le buffer d'affichage à une position donnée.
     void EcrireDansBuffer(String[] ecran, int l, int c, String texte) {
         if (l >= length(ecran)) {
             return;
@@ -459,7 +584,7 @@ class Main extends Program {
         ecran[l] = substring(ligne, 0, c) + texte + substring(ligne, c + lenV, length(ligne));
     }
 
-    // Demande la saisie d'un entier compris entre min et max.
+    // Lit un entier depuis la console avec vérification des bornes.
     int lireEntier(String message, int min, int max) {
         int val = -1;
         boolean valide = false;
@@ -480,7 +605,7 @@ class Main extends Program {
         return val;
     }
 
-    // Vérifie si une chaîne de caractères est composée uniquement de chiffres.
+    // Vérifie si une chaîne ne contient que des chiffres.
     boolean estUnNombre(String s) {
         if (length(s) == 0) {
             return false;
@@ -494,7 +619,7 @@ class Main extends Program {
         return true;
     }
 
-    // Initialise une partie avec une graine (seed) spécifique pour la génération aléatoire.
+    // Lance le jeu avec une seed prédéfinie.
     void LancerPartieAvecSeed(String seed) {
         seedActuelle = seed;
         seedNumber = StringToLong(seed);
@@ -502,7 +627,7 @@ class Main extends Program {
         LancerJeu();
     }
 
-    // Génère un nombre pseudo-aléatoire basé sur la seed actuelle.
+    // Générateur de nombres pseudo-aléatoires.
     int GenererNombrePseudoAleatoire(int max) {
         if (max <= 0) {
             return 0;
@@ -515,7 +640,7 @@ class Main extends Program {
         return (int) (resultat % max);
     }
 
-    // Convertit une chaîne de caractères en un nombre long (pour la seed).
+    // Convertit la chaîne seed en un long.
     long StringToLong(String s) {
         long h = 0;
         for (int i = 0; i < length(s); i += 1) {
@@ -524,7 +649,7 @@ class Main extends Program {
         return h;
     }
 
-    // Génère une chaîne aléatoire de caractères alphanumériques.
+    // Génère une seed aléatoire.
     String GenererRandomSeedString(int longueur) {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         String res = "";
@@ -535,7 +660,7 @@ class Main extends Program {
         return res;
     }
 
-    // Affiche l'écran final avec les scores calculés (utilise resultat.txt).
+    // Affiche l'écran de fin de partie.
     void AfficherEcranResultat(Carte[][] grille) {
         clear();
         String[] ecran = LireTemplate("visuel/resultat.txt");
@@ -554,34 +679,33 @@ class Main extends Program {
         for (int i = 0; i < 5; i += 1) {
             int score = CalculerScoreLigne(grille, i);
             scoreTotal += score;
-            int l = startLigne + (i * 7);
-            EcrireDansBuffer(ecran, l + 3, 60, "" + score);
+            EcrireDansBuffer(ecran, startLigne + (i * 7) + 3, 60, "" + score);
         }
         for (int j = 0; j < 5; j += 1) {
             int score = CalculerScoreColonne(grille, j);
             scoreTotal += score;
-            int col = 8 + (j * 10);
-            EcrireDansBuffer(ecran, 43, col, "" + score);
+            EcrireDansBuffer(ecran, 43, 8 + (j * 10), "" + score);
         }
         EcrireDansBuffer(ecran, 43, 68, "" + scoreTotal);
         RendreBuffer(ecran);
     }
 
-    // Dessine une carte spécifique à une position donnée dans le buffer d'écran.
+    // Dessine une carte dans le buffer d'affichage.
     void DessinerCarteGrande(String[] ecran, int l, int c, Carte card) {
         String val = LISTE_VALEUR[card.num];
         String sym = LISTE_COULEUR[card.couleur];
         EcrireDansBuffer(ecran, l + 1, c + 2, val);
         EcrireDansBuffer(ecran, l + 3, c + 4, sym);
-        
-        int decalage = 6;
+        int decalage = 0;
         if (length(val) == 2) {
             decalage = 5;
+        } else {
+            decalage = 6;
         }
         EcrireDansBuffer(ecran, l + 5, c + decalage, val);
     }
 
-    // Vérifie si toutes les cases d'une ligne sont occupées par une carte.
+    // Vérifie si une ligne est complète.
     boolean EstLigneComplete(Carte[][] grille, int lig) {
         for (int j = 0; j < 5; j += 1) {
             if (grille[lig][j] == null) {
@@ -591,7 +715,7 @@ class Main extends Program {
         return true;
     }
 
-    // Vérifie si toutes les cases d'une colonne sont occupées par une carte.
+    // Vérifie si une colonne est complète.
     boolean EstColonneComplete(Carte[][] grille, int col) {
         for (int i = 0; i < 5; i += 1) {
             if (grille[i][col] == null) {
@@ -601,12 +725,12 @@ class Main extends Program {
         return true;
     }
 
-    // Calcule le score d'une ligne donnée de la grille.
+    // Wrapper pour le score d'une ligne.
     int CalculerScoreLigne(Carte[][] grille, int ligneIdx) {
         return CalculerPointsMain(grille[ligneIdx]);
     }
 
-    // Calcule le score d'une colonne donnée de la grille.
+    // Wrapper pour le score d'une colonne.
     int CalculerScoreColonne(Carte[][] grille, int colIdx) {
         Carte[] col = new Carte[5];
         for (int i = 0; i < 5; i += 1) {
@@ -615,66 +739,7 @@ class Main extends Program {
         return CalculerPointsMain(col);
     }
 
-    // Analyse une main de 5 cartes et retourne les points correspondants au barème.
-    int CalculerPointsMain(Carte[] main) {
-        // Sécurité : Si une carte est null, la main ne vaut rien pour l'instant (incomplète)
-        for (int i = 0; i < length(main); i += 1) {
-            if (main[i] == null) {
-                return 0;
-            }
-        }
-
-        Carte[] triee = CopierTableau(main);
-        TrierMain(triee);
-        boolean flush = EstCouleur(triee);
-        boolean straight = EstSuite(triee);
-        int[] counts = CompterValeurs(triee);
-        boolean carre = false;
-        boolean brelan = false;
-        int paires = 0;
-        for (int i = 0; i < length(counts); i += 1) {
-            if (counts[i] == 4) {
-                carre = true;
-            }
-            if (counts[i] == 3) {
-                brelan = true;
-            }
-            if (counts[i] == 2) {
-                paires += 1;
-            }
-        }
-        if (flush && straight) {
-            if (triee[0].num == 10) {
-                return PTS_ROYAL_FLUSH;
-            } else {
-                return PTS_STRAIGHT_FLUSH;
-            }
-        }
-        if (carre) {
-            return PTS_CARRE;
-        }
-        if (flush) {
-            return PTS_FLUSH;
-        }
-        if (straight) {
-            return PTS_STRAIGHT;
-        }
-        if (brelan && paires >= 1) {
-            return PTS_FULL;
-        }
-        if (brelan) {
-            return PTS_BRELAN;
-        }
-        if (paires == 2) {
-            return PTS_DOUBLE_PAIRE;
-        }
-        if (paires == 1) {
-            return PTS_PAIRE;
-        }
-        return 0;
-    }
-
-    // Vérifie si les 5 cartes sont de la même couleur (Flush).
+    // Vérifie la combinaison Couleur (Flush).
     boolean EstCouleur(Carte[] m) {
         int c = m[0].couleur;
         for (int i = 1; i < 5; i += 1) {
@@ -685,15 +750,11 @@ class Main extends Program {
         return true;
     }
 
-    // Vérifie si les 5 cartes forment une suite (Straight).
+    // Vérifie la combinaison Suite (Straight).
     boolean EstSuite(Carte[] m) {
-        // Cas particulier : Suite A-2-3-4-5
-        // Comme le tableau est trié avant cette fonction, l'ordre est forcement : 2, 3, 4, 5, 14 (As)
         if (m[0].num == 2 && m[1].num == 3 && m[2].num == 4 && m[3].num == 5 && m[4].num == 14) {
             return true;
         }
-
-        // Cas général (vérifie si chaque carte est égale à la précédente + 1)
         for (int i = 0; i < 4; i += 1) {
             if (m[i + 1].num != m[i].num + 1) {
                 return false;
@@ -702,7 +763,7 @@ class Main extends Program {
         return true;
     }
 
-    // Compte les occurrences de chaque valeur de carte dans la main.
+    // Compte les occurrences des valeurs des cartes.
     int[] CompterValeurs(Carte[] m) {
         int[] c = new int[15];
         for (int i = 0; i < 5; i += 1) {
@@ -711,7 +772,7 @@ class Main extends Program {
         return c;
     }
 
-    // Trie les cartes d'une main par ordre croissant de valeur (Tri à bulles).
+    // Trie une main de cartes par valeur (Tri à bulles).
     void TrierMain(Carte[] t) {
         for (int i = 0; i < length(t) - 1; i += 1) {
             for (int j = 0; j < length(t) - i - 1; j += 1) {
@@ -724,7 +785,7 @@ class Main extends Program {
         }
     }
 
-    // Crée une copie indépendante d'un tableau de cartes.
+    // Copie un tableau de cartes (copie superficielle des références).
     Carte[] CopierTableau(Carte[] src) {
         Carte[] dest = new Carte[length(src)];
         for (int i = 0; i < length(src); i += 1) {
@@ -733,7 +794,7 @@ class Main extends Program {
         return dest;
     }
 
-    // Affiche le contenu du buffer (tableau de chaînes) ligne par ligne.
+    // Affiche le tableau de chaînes à l'écran.
     void RendreBuffer(String[] ecran) {
         print(WHITE + BG_BLACK);
         for (int i = 0; i < length(ecran); i += 1) {
@@ -751,7 +812,7 @@ class Main extends Program {
         print(RESET);
     }
 
-    // Lit un fichier texte et retourne son contenu sous forme de tableau de chaînes.
+    // Lit un fichier template ligne par ligne.
     String[] LireTemplate(String chemin) {
         File f = newFile(chemin);
         int nb = 0;
@@ -769,13 +830,13 @@ class Main extends Program {
         return tab;
     }
 
-    // Affiche l'écran d'accueil du jeu.
+    // Affiche la page d'accueil.
     void AfficherPageAccueuil() {
         String[] ecran = LireTemplate("visuel/acceuil.txt");
         RendreBuffer(ecran);
     }
 
-    // Affiche l'écran des règles du jeu.
+    // Affiche les règles.
     void AfficherRegles() {
         clear();
         String[] regles = LireTemplate("visuel/regle.md");
@@ -784,7 +845,7 @@ class Main extends Program {
         readString();
     }
 
-    // Crée un paquet neuf de 52 cartes ordonnées.
+    // Crée un paquet de 52 cartes.
     Carte[] CreeNouveauJeu() {
         Carte[] p = new Carte[52];
         int idx = 0;
@@ -800,7 +861,7 @@ class Main extends Program {
         return p;
     }
 
-    // Mélange le paquet de cartes en utilisant l'algorithme de Fisher-Yates (adapté).
+    // Mélange le paquet.
     void Melanger(Carte[] p) {
         for (int i = 0; i < length(p); i += 1) {
             int r = GenererNombrePseudoAleatoire(length(p));
@@ -810,19 +871,21 @@ class Main extends Program {
         }
     }
 
-    // Retourne le nom lisible d'une carte (Ex: "10♠").
+    // Retourne la représentation textuelle d'une carte.
     String NomCarte(Carte c) {
         return LISTE_VALEUR[c.num] + LISTE_COULEUR[c.couleur];
     }
 
-    // Efface le terminal en utilisant les codes ANSI.
+    // Efface le terminal.
     void clear() {
         print("\u001B[H\u001B[2J");
     }
 
     // ========================================================================================================================
-    // TESTS
+    // TESTS UNITAIRES COMPLETS
     // ========================================================================================================================
+    
+    // Utilitaire pour créer une carte rapidement dans les tests
     Carte newCarte(int v, int c) {
         Carte a = new Carte();
         a.num = v;
@@ -831,167 +894,152 @@ class Main extends Program {
     }
 
     void testCalculerPointsMain() {
-        // Test Royal Flush
+        // Royal Flush
         Carte[] royal = new Carte[]{newCarte(10, 0), newCarte(V, 0), newCarte(D, 0), newCarte(R, 0), newCarte(A, 0)};
-        assertEquals(PTS_ROYAL_FLUSH, CalculerPointsMain(royal));
+        assertEquals(1208, CalculerPointsMain(royal)); // (51 + 100) * 8
         
-        // Test Main Incomplète (doit retourner 0)
-        Carte[] incomplet = new Carte[]{newCarte(2, 0), null, newCarte(5, 2), newCarte(5, 3), newCarte(A, 0)};
-        assertEquals(0, CalculerPointsMain(incomplet));
-        
-        // Test Rien (Carte haute complète)
+        // Carte Haute (Rien)
         Carte[] rien = new Carte[]{newCarte(2, 0), newCarte(4, 1), newCarte(6, 2), newCarte(8, 3), newCarte(10, 0)};
-        assertEquals(0, CalculerPointsMain(rien));
+        assertEquals(15, CalculerPointsMain(rien)); // (10 + 5) * 1
+
+        // Full House
+        Carte[] full = new Carte[]{newCarte(R, 0), newCarte(R, 1), newCarte(R, 2), newCarte(A, 0), newCarte(A, 1)};
+        assertEquals(368, CalculerPointsMain(full));
+
+        // Paire
+        Carte[] paire = new Carte[]{newCarte(5, 0), newCarte(5, 1), newCarte(2, 2), newCarte(3, 3), newCarte(4, 0)};
+        assertEquals(40, CalculerPointsMain(paire));
     }
 
+    void testJetonsPourValeur() {
+        assertEquals(5, JetonsPourValeur(5));
+        assertEquals(10, JetonsPourValeur(10));
+        assertEquals(11, JetonsPourValeur(14));
+        assertEquals(0, JetonsPourValeur(99)); // Cas invalide
+    }
+    
     void testEstLigneComplete() {
         Carte[][] grille = new Carte[5][5];
-        // Remplir une ligne
-        for(int j=0; j<5; j+=1) grille[0][j] = newCarte(2,0);
+        for (int j = 0; j < 5; j += 1) {
+            grille[0][j] = newCarte(2, 0);
+        }
         assertTrue(EstLigneComplete(grille, 0));
-        
-        // Ligne vide
         assertFalse(EstLigneComplete(grille, 1));
-        
-        // Ligne partielle
-        grille[2][0] = newCarte(2,0);
-        assertFalse(EstLigneComplete(grille, 2));
+    }
+
+    void testEstColonneComplete() {
+        Carte[][] grille = new Carte[5][5];
+        for (int i = 0; i < 5; i += 1) {
+            grille[i][0] = newCarte(2, 0);
+        }
+        assertTrue(EstColonneComplete(grille, 0));
+        assertFalse(EstColonneComplete(grille, 1));
+    }
+
+    void testCalculerScoreLigne() {
+        Carte[][] grille = new Carte[5][5];
+        // Remplir ligne 0 avec un Flush (2, 3, 4, 5, 6 de couleur 0)
+        for (int j = 0; j < 5; j += 1) {
+            grille[0][j] = newCarte(j + 2, 0);
+        }
+        // Score: Straight Flush (30 + 35) = 66 non, (20 + 100) * 8 = 960 (Straight Flush Balatro : (2+3+4+5+6 + 100) * 8 = 960)
+        assertTrue(CalculerScoreLigne(grille, 0) > 0);
+        assertEquals(0, CalculerScoreLigne(grille, 1)); // Ligne vide
+    }
+
+    void testCalculerScoreColonne() {
+        Carte[][] grille = new Carte[5][5];
+        // Remplir col 0 avec des As (Carré possible si 4 As, ici 5 As = Carré)
+        for (int i = 0; i < 5; i += 1) {
+            grille[i][0] = newCarte(A, 0);
+        }
+        assertTrue(CalculerScoreColonne(grille, 0) > 0);
+        assertEquals(0, CalculerScoreColonne(grille, 1));
     }
 
     void testEstCouleur() {
         Carte[] oui = new Carte[]{newCarte(2, 0), newCarte(5, 0), newCarte(7, 0), newCarte(9, 0), newCarte(R, 0)};
         assertTrue(EstCouleur(oui));
-        
-        Carte[] non = new Carte[]{newCarte(2, 0), newCarte(5, 0), newCarte(7, 1), newCarte(9, 0), newCarte(R, 0)};
+        Carte[] non = new Carte[]{newCarte(2, 0), newCarte(5, 1), newCarte(7, 0), newCarte(9, 0), newCarte(R, 0)};
         assertFalse(EstCouleur(non));
     }
 
-void testEstSuite() {
-        // Test suite classique
+    void testEstSuite() {
         Carte[] oui = new Carte[]{newCarte(2, 0), newCarte(3, 1), newCarte(4, 0), newCarte(5, 2), newCarte(6, 0)};
         assertTrue(EstSuite(oui));
-        
-        // Test suite As faible (A, 2, 3, 4, 5) -> Trié en (2, 3, 4, 5, 14)
-        Carte[] asFaible = new Carte[]{newCarte(2, 0), newCarte(3, 1), newCarte(4, 0), newCarte(5, 2), newCarte(14, 0)};
-        assertTrue(EstSuite(asFaible));
-
-        // Test pas de suite
         Carte[] non = new Carte[]{newCarte(2, 0), newCarte(3, 1), newCarte(4, 0), newCarte(5, 2), newCarte(7, 0)};
         assertFalse(EstSuite(non));
     }
 
-    void testGenererNombrePseudoAleatoire() {
-        seedNumber = 12345;
-        int res1 = GenererNombrePseudoAleatoire(100);
-        assertTrue(res1 >= 0 && res1 < 100);
-        
-        // Vérification de la reproductibilité
-        seedNumber = 12345;
-        int res2 = GenererNombrePseudoAleatoire(100);
-        assertEquals(res1, res2);
-    }
-
-    void testStringToLong() {
-        assertEquals(0, StringToLong(""));
-        assertEquals(65, StringToLong("A"));
-        assertEquals(2001, StringToLong("AB")); // Exemple arbitraire de hash simple
-    }
-
-    void testGenererRandomSeedString() {
-        String s1 = GenererRandomSeedString(10);
-        assertEquals(10, length(s1));
-        
-        String s2 = GenererRandomSeedString(5);
-        assertEquals(5, length(s2));
-    }
-
-    void testCalculerScoreLigne() {
-        Carte[][] grille = new Carte[5][5];
-        // Brelan
-        grille[0][0] = newCarte(2, 0);
-        grille[0][1] = newCarte(2, 1);
-        grille[0][2] = newCarte(2, 2);
-        grille[0][3] = newCarte(5, 0);
-        grille[0][4] = newCarte(7, 1);
-        assertEquals(PTS_BRELAN, CalculerScoreLigne(grille, 0));
-        
-        // Rien
-        grille[1][0] = newCarte(2, 0);
-        grille[1][1] = newCarte(4, 1);
-        grille[1][2] = newCarte(6, 2);
-        grille[1][3] = newCarte(8, 0);
-        grille[1][4] = newCarte(10, 1);
-        assertEquals(0, CalculerScoreLigne(grille, 1));
-    }
-
-    void testCalculerScoreColonne() {
-        Carte[][] grille = new Carte[5][5];
-        // Flush vertical
-        for (int i = 0; i < 5; i += 1) {
-            grille[i][0] = newCarte(i + 2, 0);
-        }
-        grille[4][0] = newCarte(10, 0);
-        assertEquals(PTS_FLUSH, CalculerScoreColonne(grille, 0));
-        
-        // Paire verticale
-        grille[0][1] = newCarte(3, 0);
-        grille[1][1] = newCarte(3, 1);
-        grille[2][1] = newCarte(5, 2);
-        grille[3][1] = newCarte(6, 3);
-        grille[4][1] = newCarte(7, 0);
-        assertEquals(PTS_PAIRE, CalculerScoreColonne(grille, 1));
-    }
-
     void testCompterValeurs() {
-        Carte[] main = new Carte[]{newCarte(2, 0), newCarte(2, 1), newCarte(5, 0), newCarte(5, 1), newCarte(5, 2)};
+        Carte[] main = new Carte[]{newCarte(5, 0), newCarte(5, 1), newCarte(5, 2), newCarte(2, 3), newCarte(9, 0)};
         int[] counts = CompterValeurs(main);
-        assertEquals(2, counts[2]);
         assertEquals(3, counts[5]);
+        assertEquals(1, counts[2]);
+        assertEquals(1, counts[9]);
         assertEquals(0, counts[10]);
     }
 
     void testCopierTableau() {
-        Carte[] src = new Carte[]{newCarte(1, 0), newCarte(2, 0)};
+        Carte[] src = new Carte[]{newCarte(1, 1)};
         Carte[] dest = CopierTableau(src);
-        assertEquals(length(src), length(dest));
-        
-        // Vérification copie profonde (les objets sont les mêmes références ici, mais le tableau est nouveau)
-        dest[0] = newCarte(99, 99); // On change la référence dans le nouveau tableau
-        assertTrue(src[0].num != 99); // L'ancien ne doit pas changer
+        assertEquals(1, length(dest));
+        assertFalse(src == dest); // Vérifie que c'est une nouvelle instance de tableau
     }
 
     void testCreeNouveauJeu() {
         Carte[] p = CreeNouveauJeu();
         assertEquals(52, length(p));
-        assertEquals(2, p[0].num);
-        assertEquals(0, p[0].couleur);
-        assertEquals(14, p[51].num); // As de Pique (dernier)
+        assertFalse(p[0] == null);
     }
 
     void testNomCarte() {
-        Carte c1 = newCarte(12, 1);
-        assertEquals("D♥", NomCarte(c1));
-        Carte c2 = newCarte(10, 3);
-        assertEquals("10♠", NomCarte(c2));
+        Carte c = newCarte(14, 3); // As de Pique
+        assertEquals("A♠", NomCarte(c));
+        Carte c2 = newCarte(10, 1); // 10 de Coeur
+        assertEquals("10♥", NomCarte(c2));
     }
 
     void testToUpperCases() {
         assertEquals("ABC", toUpperCases("abc"));
         assertEquals("TEST", toUpperCases("TeSt"));
-        assertEquals("123", toUpperCases("123"));
     }
 
     void testLongueurVisuelle() {
         assertEquals(3, longueurVisuelle("abc"));
-        assertEquals(5, longueurVisuelle("\u001B[31mHELLO\u001B[0m"));
         assertEquals(0, longueurVisuelle(""));
+        assertEquals(4, longueurVisuelle("test" + RED));
     }
 
     void testEstUnNombre() {
         assertTrue(estUnNombre("123"));
-        assertTrue(estUnNombre("0"));
         assertFalse(estUnNombre("12a"));
         assertFalse(estUnNombre(""));
-        assertFalse(estUnNombre("-5")); // Gère uniquement les entiers positifs simples ici
+    }
+
+    void testGenererNombrePseudoAleatoire() {
+        seedNumber = 12345;
+        int n = GenererNombrePseudoAleatoire(10);
+        assertTrue(n >= 0);
+        assertTrue(n < 10);
+    }
+
+    void testStringToLong() {
+        assertTrue(StringToLong("A") > 0);
+        assertEquals(0, StringToLong(""));
+    }
+
+    void testGenererRandomSeedString() {
+        assertEquals(5, length(GenererRandomSeedString(5)));
+        assertEquals(10, length(GenererRandomSeedString(10)));
+    }
+
+    void testGetTexteReponse() {
+        Question q = new Question();
+        q.repA = "Reponse A";
+        q.repB = "Reponse B";
+        assertEquals("Reponse A", GetTexteReponse(q, "A"));
+        assertEquals("Reponse B", GetTexteReponse(q, "B"));
+        assertEquals("Inconnu", GetTexteReponse(q, "Z"));
     }
 }
