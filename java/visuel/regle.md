@@ -1,74 +1,53 @@
-### 1. L'Objectif du Jeu
-Le but est de marquer un maximum de points en constituant **10 mains de poker** simultanément sur une grille de 5x5 cartes.
-* **5 mains horizontales** (les lignes).
-* **5 mains verticales** (les colonnes).
+# RÈGLES DU JEU - TRÉFLEXION (Édition Balatro)
 
-### 2. Matériel et Mise en place
-* Un jeu standard de 52 cartes (sans Jokers).
-* Une grille vide de 5 cases sur 5 (soit 25 emplacements).
+### 1. BUT DU JEU
+L'objectif est de remplir une grille de 5x5 cases (25 cartes) pour former les meilleures mains de poker possibles sur les **5 lignes** et les **5 colonnes**.
 
+Le score total est la somme des scores des 10 mains formées.
 
-### 3. Déroulement d'un tour
-Le jeu se déroule en **25 tours** exactement.
+### 2. DÉROULEMENT D'UN TOUR
+1.  **La Pioche :** Une carte vous est proposée.
+2.  **La Décision :**
+    * Soit vous la **placez** sur une case vide (Coordonnées Ligne/Colonne).
+    * Soit vous la **défaussez** en utilisant un Joker (touche 'J').
+3.  **Irréversible :** Une fois posée, une carte ne peut plus être déplacée.
 
-1.  **La Pioche :** Le joueur tire une carte du dessus du paquet.
-2.  **Le Placement :** Le joueur doit placer cette carte sur n'importe quelle case **vide** de la grille.
-3.  **La Règle d'Or :** Une fois qu'une carte est posée, elle **ne peut plus être déplacée**.
-4.  **Répétition :** On répète l'opération jusqu'à ce que les 25 cases soient remplies.
-5.  **Fin :** Il restera 27 cartes dans le paquet qui ne seront jamais utilisées.
+### 3. LES JOKERS (QUIZ)
+Vous disposez d'un stock limité de **15 Jokers**.
+* Pour activer un Joker, entrez **'J'** (ou 'j') au moment de choisir la ligne ou la colonne.
+* Une question de culture générale (Maths/Logique/Casino) vous sera posée.
+    * **Bonne réponse :** La carte est défaussée sans pénalité. On passe à la suivante.
+    * **Mauvaise réponse :** Le Joker est perdu et vous êtes **obligé** de jouer la carte.
 
-### 4. Le Système de Points (Scoring)
+### 4. SYSTÈME DE SCORE (BALATRO)
+Le calcul des points suit la formule :
+**SCORE = (Somme des Jetons + Base) x Multiplicateur**
 
-C'est ici que votre projet de groupe prend tout son sens. Il existe deux systèmes. Pour votre projet, je recommande le **Système Américain**, car il respecte mieux les probabilités géométriques de la grille.
+#### A. Valeur des Cartes (Jetons)
+Seules les cartes qui *contribuent* à la combinaison (Cartes Actives) donnent des jetons.
+* **2 à 9** : Valeur faciale (ex: 7 vaut 7 jetons).
+* **10, Valet, Dame, Roi** : 10 jetons.
+* **As** : 11 jetons.
 
-*Pourquoi ?* Dans une grille 5x5, il est mathématiquement plus difficile de faire une Couleur (Flush) qu'un Full. Le barème s'adapte donc à cette difficulté.
+#### B. Barème des Mains (Base Chips x Mult)
+| Main de Poker | Base | Mult | Cartes Actives (qui comptent) |
+| :--- | :--- | :--- | :--- |
+| **Quinte Flush Royale** | **100** | **x8** | Les 5 cartes |
+| **Quinte Flush** | **100** | **x8** | Les 5 cartes |
+| **Carré** (4 of a Kind) | **60** | **x7** | Seulement les 4 cartes identiques |
+| **Full House** | **40** | **x4** | Les 5 cartes (Brelan + Paire) |
+| **Couleur** (Flush) | **35** | **x4** | Les 5 cartes |
+| **Suite** (Straight) | **30** | **x4** | Les 5 cartes |
+| **Brelan** (3 of a Kind) | **30** | **x3** | Seulement les 3 cartes identiques |
+| **Double Paire** | **20** | **x2** | Seulement les 4 cartes (2 Paires) |
+| **Paire** | **10** | **x2** | Seulement les 2 cartes de la paire |
+| **Carte Haute** | **5** | **x1** | Seulement la carte la plus forte |
 
-#### Tableau des scores (Système Américain)
+### 5. COMMANDES
+* **Ligne :** Entrez un chiffre de 1 à 5.
+* **Colonne :** Entrez un chiffre de 1 à 5.
+* **Joker :** Entrez 'J' ou 'j' pour tenter de défausser.
 
-| Main de Poker (Nom FR) | Description | Points |
-| :--- | :--- | :--- |
-| **Quinte Flush Royale** | 10, V, D, R, As de la même couleur | **100** |
-| **Quinte Flush** | 5 cartes qui se suivent de la même couleur | **75** |
-| **Carré** (4 of a Kind) | 4 cartes de même valeur (ex: 4 Rois) | **50** |
-| **Couleur** (Flush) | 5 cartes de la même couleur (ex: 5 Cœurs) | **20** |
-| **Full** (Full House) | 1 Brelan + 1 Paire (ex: 3 Rois, 2 As) | **10** |
-| **Suite / Quinte** (Straight)| 5 cartes qui se suivent (couleurs mixtes) | **15** |
-| **Brelan** (3 of a Kind) | 3 cartes de même valeur | **10** |
-| **Double Paire** | 2 paires différentes | **5** |
-| **Une Paire** | 2 cartes de même valeur | **2** |
-| **Carte Haute** | Aucune combinaison | **0** |
-
-*Notez que dans ce système, la Couleur vaut plus que le Full, et la Suite vaut plus que le Brelan.*
-
-### 5. Détail des mains (Logique de validation)
-
-Voici l'ordre de priorité strict (si une main est à la fois une Suite et une Couleur, c'est une Quinte Flush).
-
-1.  **Quinte Flush Royale (Royal Flush) :**
-    * *Condition :* `IsFlush` (Même couleur) AND `IsStraight` (Se suivent) AND `Contains(Ace)` AND `Contains(King)`.
-2.  **Quinte Flush (Straight Flush) :**
-    * *Condition :* `IsFlush` AND `IsStraight`.
-3.  **Carré (Four of a Kind) :**
-    * *Condition :* 4 cartes identiques en valeur.
-4.  **Couleur (Flush) :**
-    * *Condition :* 5 cartes du même symbole (Cœur, Pique, Trèfle, Carreau).
-5.  **Full (Full House) :**
-    * *Condition :* 3 cartes valeur X + 2 cartes valeur Y.
-6.  **Suite (Straight) :**
-    * *Condition :* 5 valeurs consécutives. *Attention : L'As peut être au début (A-2-3-4-5) ou à la fin (10-V-D-R-A).*
-7.  **Brelan (Three of a Kind) :**
-    * *Condition :* 3 cartes de même valeur.
-8.  **Double Paire (Two Pair) :**
-    * *Condition :* 2 cartes valeur X + 2 cartes valeur Y.
-9.  **Paire (One Pair) :**
-    * *Condition :* 2 cartes de même valeur.
-
-### 6. Exemple de calcul de score final
-
-Imaginez la ligne 1 : `As♥`, `As♦`, `As♣`, `Roi♠`, `Roi♥`
--> C'est un **Full** (3 As + 2 Rois) -> **10 points**.
-
-Imaginez la colonne 1 : `As♥`, `2♥`, `5♥`, `Valet♥`, `9♥`
--> C'est une **Couleur** (Tous Cœurs) -> **20 points**.
-
-Vous faites le calcul pour les 5 lignes + les 5 colonnes = **Score Total**.
+### 6. SEED (Graine de génération)
+Chaque partie possède un code unique appelé **Seed** (ex: `A1B2C3D4`).
+Vous pouvez noter ce code à la fin d'une partie et le saisir dans le menu principal pour rejouer exactement la même distribution de cartes et comparer votre score avec un ami !
