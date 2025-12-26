@@ -1,5 +1,4 @@
 rendre l'affichage des règles plus joli
-mettre des commantaire pour que se connard de sue soit content que l'on est plus de 1000ligne
-modifier le system de point? (multiplicateur)
 afficher les record dans resultat avec record.csv
 system de sauvegarde?
+dans historique ecrire les point obtenu quand complete une ligne(ex:ecrire pair de 2)
