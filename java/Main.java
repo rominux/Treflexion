@@ -128,65 +128,65 @@ class Main extends Program {
 
                 println("\n=== TOUR " + (cartesPosees + 1) + "/25 ===");
                 int lig = lireCoordonneeOuJoker("Ligne (1-5) ou 'J' : ");
-
                 if (lig == -3) {
-                    messageInfo = RED + ">> ERREUR : Ligne hors limites (1-5) !" + RESET;
+                    messageInfo = RED + ">> ERREUR : Ligne hors limites (1-5) !" + RESET + WHITE + BG_BLACK;
                 } else if (lig == -1) {
-                    messageInfo = RED + ">> ERREUR : Saisie invalide !" + RESET;
+                    messageInfo = RED + ">> ERREUR : Saisie invalide !" + RESET + WHITE + BG_BLACK;
                 } else if (lig == -2) { // JOKER
                     if (jokers > 0 && peutPasser) {
                         boolean gagne = PoserQuestion();
                         if (gagne) {
-                            messageInfo = GREEN + ">> CORRECT ! Carte défaussée." + RESET;
-                            AjouterHistorique(GREEN + "Joker : " + NomCarte(cActuelle) + " défaussée." + RESET);
+                            messageInfo = GREEN + ">> CORRECT ! Carte défaussée." + RESET + WHITE + BG_BLACK;
+                            AjouterHistorique(GREEN + "Joker : " + NomCarte(cActuelle) + " défaussée." + RESET + WHITE + BG_BLACK);
                             jokers -= 1;
                             peutPasser = false;
                             idxPaquet += 1;
                             tourJoue = true;
                             continue;
                         } else {
-                            messageInfo = RED + ">> ERREUR ! Vous devez jouer la carte." + RESET;
+                            messageInfo = RED + ">> ERREUR ! Vous devez jouer la carte." + RESET + WHITE + BG_BLACK;
                             peutPasser = false;
                         }
                     } else {
-                        messageInfo = RED + ">> Joker impossible !" + RESET;
+                        messageInfo = RED + ">> Joker impossible !" + RESET + WHITE + BG_BLACK;
                     }
                 } else if (lig >= 0) {
                     int col = lireCoordonneeOuJoker("Colonne (1-5) ou 'J' : ");
 
                     if (col == -3) {
-                        messageInfo = RED + ">> ERREUR : Colonne hors limites (1-5) !" + RESET;
+                        messageInfo = RED + ">> ERREUR : Colonne hors limites (1-5) !" + RESET + WHITE + BG_BLACK;
                     } else if (col == -1) {
-                        messageInfo = RED + ">> ERREUR : Saisie invalide !" + RESET;
+                        messageInfo = RED + ">> ERREUR : Saisie invalide !" + RESET + WHITE + BG_BLACK;
                     } else if (col == -2) {
                         if (jokers > 0 && peutPasser) {
                             boolean gagne = PoserQuestion();
                             if (gagne) {
-                                messageInfo = GREEN + ">> CORRECT ! Carte défaussée." + RESET;
-                                AjouterHistorique(GREEN + "Joker : " + NomCarte(cActuelle) + " défaussée." + RESET);
+                                messageInfo = GREEN + ">> CORRECT ! Carte défaussée." + RESET + WHITE + BG_BLACK;
+                                AjouterHistorique(GREEN + "Joker : " + NomCarte(cActuelle) + " défaussée." + RESET + WHITE + BG_BLACK);
                                 jokers -= 1;
                                 peutPasser = false;
                                 idxPaquet += 1;
                                 tourJoue = true;
                                 continue;
                             } else {
-                                messageInfo = RED + ">> ERREUR ! Vous devez jouer la carte." + RESET;
+                                messageInfo = RED + ">> ERREUR ! Vous devez jouer la carte." + RESET + WHITE + BG_BLACK;
                                 peutPasser = false;
                             }
                         } else {
-                            messageInfo = RED + ">> Joker impossible !" + RESET;
+                            messageInfo = RED + ">> Joker impossible !" + RESET + WHITE + BG_BLACK;
                         }
                     } else if (col >= 0) {
                         if (grille[lig][col] == null) {
                             grille[lig][col] = cActuelle;
                             
-                            AjouterHistorique("Posé " + NomCarte(cActuelle) + " en (" + (lig + 1) + "," + (col + 1) + ")");
+                            // ICI AUSSI : Ajout de WHITE + BG_BLACK pour éviter le fond blanc après le texte
+                            AjouterHistorique("Posé " + NomCarte(cActuelle) + " en (" + (lig + 1) + "," + (col + 1) + ")" + RESET + WHITE + BG_BLACK);
                             
                             if (EstLigneComplete(grille, lig)) {
-                                AjouterHistorique(YELLOW + "Ligne " + (lig + 1) + " complétée !" + RESET);
+                                AjouterHistorique(YELLOW + "Ligne " + (lig + 1) + " complétée !" + RESET + WHITE + BG_BLACK);
                             }
                             if (EstColonneComplete(grille, col)) {
-                                AjouterHistorique(YELLOW + "Colonne " + (col + 1) + " complétée !" + RESET);
+                                AjouterHistorique(YELLOW + "Colonne " + (col + 1) + " complétée !" + RESET + WHITE + BG_BLACK);
                             }
 
                             cartesPosees += 1;
@@ -194,7 +194,7 @@ class Main extends Program {
                             peutPasser = true;
                             tourJoue = true;
                         } else {
-                            messageInfo = RED + ">> ERREUR : Case occupée !" + RESET;
+                            messageInfo = RED + ">> ERREUR : Case occupée !" + RESET + WHITE + BG_BLACK;
                         }
                     }
                 }
@@ -415,7 +415,7 @@ class Main extends Program {
             }
         }
 
-        derniereReponseJoueurLettre = toUpperCases(rep);
+        derniereReponseJoueurLettre = Majuscule(rep);
         derniereReponseJoueurTexte = GetTexteReponse(q, derniereReponseJoueurLettre);
         
         derniereReponseJusteLettre = q.bonneReponse;
@@ -427,9 +427,9 @@ class Main extends Program {
 
         String msgResultat = "";
         if (correct) {
-            msgResultat = GREEN + "BONNE RÉPONSE ! +1 Joker" + RESET;
+            msgResultat = GREEN + "BONNE RÉPONSE ! +1 Joker" + RESET + WHITE + BG_BLACK;
         } else {
-            msgResultat = RED + "MAUVAISE RÉPONSE... (" + q.bonneReponse + ")" + RESET;
+            msgResultat = RED + "MAUVAISE RÉPONSE... (" + q.bonneReponse + ")" + RESET + WHITE + BG_BLACK;
         }
         
         AfficherEcranQuestion(q, msgResultat, true);
@@ -439,7 +439,7 @@ class Main extends Program {
     }
 
     // Convertit une chaîne minuscule en majuscule.
-    String toUpperCases(String s) {
+    String Majuscule(String s) {
         String res = "";
         for (int i = 0; i < length(s); i += 1) {
             char c = charAt(s, i);
@@ -489,7 +489,7 @@ class Main extends Program {
 
         // 3. Panneau Question (Milieu)
         if (length(derniereReponseJusteLettre) > 0) {
-            EcrireDansBuffer(ecran, 39, 66, CYAN + "DERNIERE QUESTION :" + RESET);
+            EcrireDansBuffer(ecran, 39, 66, CYAN + "DERNIERE QUESTION :" + RESET + WHITE + BG_BLACK);
             
             if (length(derniereQuestionEnonce) > 90) {
                 String l1 = substring(derniereQuestionEnonce, 0, 90);
@@ -500,7 +500,7 @@ class Main extends Program {
                 EcrireDansBuffer(ecran, 40, 66, derniereQuestionEnonce);
             }
 
-            String texteBonne = GREEN + "Reponse Correcte : " + derniereReponseJusteLettre + " - " + derniereReponseJusteTexte + RESET;
+            String texteBonne = GREEN + "Reponse Correcte : " + derniereReponseJusteLettre + " - " + derniereReponseJusteTexte + RESET + WHITE + BG_BLACK;
             EcrireDansBuffer(ecran, 42, 66, texteBonne);
 
             String coulJoueur = "";
@@ -509,7 +509,7 @@ class Main extends Program {
             } else {
                 coulJoueur = RED;
             }
-            String texteJoueur = coulJoueur + "Votre Reponse    : " + derniereReponseJoueurLettre + " - " + derniereReponseJoueurTexte + RESET;
+            String texteJoueur = coulJoueur + "Votre Reponse    : " + derniereReponseJoueurLettre + " - " + derniereReponseJoueurTexte + RESET + WHITE + BG_BLACK;
             EcrireDansBuffer(ecran, 43, 66, texteJoueur);
 
             EcrireDansBuffer(ecran, 44, 66, "Explication : " + derniereExplication);
@@ -796,8 +796,8 @@ class Main extends Program {
 
     // Affiche le tableau de chaînes à l'écran.
     void RendreBuffer(String[] ecran) {
-        print(WHITE + BG_BLACK);
         for (int i = 0; i < length(ecran); i += 1) {
+            print(WHITE + BG_BLACK); // <--- DEPLACE ICI POUR FORCER L'AFFICHAGE CORRECT A CHAQUE LIGNE
             String ligne = ecran[i];
             for (int j = 0; j < length(ligne); j += 1) {
                 char c = charAt(ligne, j);
@@ -878,7 +878,7 @@ class Main extends Program {
 
     // Efface le terminal.
     void clear() {
-        print("\u001B[H\u001B[2J");
+        print("\u001B[H\u001B[2J" + RESET);
     }
 
     // ========================================================================================================================
@@ -1000,9 +1000,9 @@ class Main extends Program {
         assertEquals("10♥", NomCarte(c2));
     }
 
-    void testToUpperCases() {
-        assertEquals("ABC", toUpperCases("abc"));
-        assertEquals("TEST", toUpperCases("TeSt"));
+    void testMajuscule() {
+        assertEquals("ABC", Majuscule("abc"));
+        assertEquals("TEST", Majuscule("TeSt"));
     }
 
     void testLongueurVisuelle() {
